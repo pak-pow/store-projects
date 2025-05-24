@@ -2,6 +2,9 @@ import csv
 import datetime
 import os
 import time
+from reportlab.lib.pagesizes import LETTER
+from reportlab.pdfgen import canvas
+
 
 FILENAME = "receipt.csv"
 HEADER = ["Name", "Container", "Price", "Total", "Timestamp"]
@@ -62,29 +65,40 @@ def view_order():
 
 def print_order(name, con, price, total, now_str):
 
-    print ("")
-    print ("******" * 6)
-    print ("\n\t\t\tOrder Slip")
-    print (f"\t\t{now_str}")
-    print ("")
+    pdf_folder = "receipts"
+    os.makedirs(pdf_folder, exist_ok=True)
+    filename = os.path.join(pdf_folder, f"receipt_{now_str.replace(':', ' ').replace('-', ' ').replace(' ', '_')}.pdf")
 
-    print ("======" * 6)
+    c = canvas.Canvas(filename, pagesize=LETTER)
+    width, height = LETTER
 
-    # ================================
+    y = height - 50
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(width / 2, y, "Water Refilling Station Receipt")
 
-    print (f"Customer: \t\t\t\t\t{name}")
-    print (f"Container: \t\t\t\t\t{con}")
-    print (f"Price: \t\t\t\t\t\t{price}")
-    print (f"Total: \t\t\t\t\t\t{total}")
+    y -= 40
+    c.setFont("Helvetica", 12)
+    c.drawString(50, y, f"Date & Time: {now_str}")
+    y -= 20
+    c.drawString(50, y, f"Customer Name: {name}")
+    y -= 20
+    c.drawString(50, y, f"Containers: {con}")
+    y -= 20
+    c.drawString(50, y, f"Price per Container: ₱{price}")
+    y -= 20
+    c.drawString(50, y, f"Total: ₱{total}")
+    y -= 40
+    c.drawString(50, y, "Thank you for your order!")
 
-    # ================================
+    c.save()
 
-    print ("======" * 6, "\n")
-    print ("\t Thank You for ordering our")
-    print ("\t  Water Refilling Station\n")
-    print ("******" * 6)
-    time.sleep(1)
+    print(f"\nReceipt saved as: {filename}")
 
+    try:
+        os.startfile(filename, "print")
+    except Exception as e:
+        print("Could not print automatically:", e)
+        
 def main():
 
     if not os.path.exists(FILENAME):
